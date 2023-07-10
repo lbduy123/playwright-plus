@@ -22,11 +22,19 @@ __all__ = [
 
 
 def create_block_resources(resources_to_block: list):
+    """Return a function that abort the route if its resource_type is in resources_to_block list.
+
+    :param resources_to_block: list of blocked resources
+    :type resources_to_block: list
+
+    """
+
     def _block_resources(route):
-        """
-        See
+        """See
         - https://playwright.dev/python/docs/api/class-request#request-resource-type
         - https://www.zenrows.com/blog/blocking-resources-in-playwright#blocking-resources
+
+        :param route:
 
         """
         try:
@@ -55,6 +63,24 @@ def _instantiate_browser_context_page(
     browser_type: str = "chromium",
     **kwargs,
 ):
+    """Internal function that init then returns Playwright browser, context and page with options (and context init script)
+
+    :param p:
+    :param proxy_info:  (Default value = None)
+    :type proxy_info: dict
+    :param headless:  (Default value = True)
+    :type headless: bool
+    :param accept_downloads:  (Default value = True)
+    :type accept_downloads: bool
+    :param block_resources:  (Default value = True)
+    :type block_resources: bool | list
+    :param cookies:  (Default value = None)
+    :type cookies: list[dict]
+    :param browser_type:  (Default value = "chromium")
+    :type browser_type: str
+    :param **kwargs:
+
+    """
     # open chromium browser, using specified proxy
     logging.debug(
         f"[playwright_plus] open a browser : headless={headless}, proxy_info={proxy_info.get('server') if isinstance(proxy_info, dict) else None}"
@@ -91,6 +117,11 @@ def _instantiate_browser_context_page(
         )
 
         def _block_resources(route):
+            """
+
+            :param route:
+
+            """
             try:
                 if route.request.resource_type in resources_to_block:
                     route.abort()
@@ -114,6 +145,21 @@ def open_new_page(
     cookies: list[dict] = None,
     **kwargs,
 ):
+    """Open a new page in Playwright chromium browser with options
+
+    :param proxy_info:  (Default value = None)
+    :type proxy_info: dict
+    :param headless:  (Default value = True)
+    :type headless: bool
+    :param accept_downloads:  (Default value = True)
+    :type accept_downloads: bool
+    :param block_resources:  (Default value = True)
+    :type block_resources: bool | list
+    :param cookies:  (Default value = None)
+    :type cookies: list[dict]
+    :param **kwargs:
+
+    """
     p = sync_playwright().start()
 
     browser, context, page = _instantiate_browser_context_page(
@@ -129,8 +175,27 @@ def open_new_page(
 
 
 def with_page(**kwargs):
+    """Decorator that init Playwright chromium browser with default options if those are not specified
+
+    :param **kwargs: Key word arguments passed to _instantiate_browser_context_page function
+
+    """
+
     def decorator(func):
+        """
+
+        :param func: function to be decorated
+
+        """
+
         def func_wrapper(*func_args, **func_kwargs):
+            """New page from _instantiate_browser_context_page will be added as key word argument to decorated function.
+            Playwright browser and page will be closed after the decorated function executed.
+
+            :param *func_args: non key word arguments of decorated function
+            :param **func_kwargs: key word arguments of decorated function
+
+            """
             # by default, accept_downloads=True, headless=True, block_resources=True, no proxy, no cookies
             default = {
                 "accept_downloads": True,
@@ -168,6 +233,17 @@ def with_page(**kwargs):
 
 ### WEB SURFING
 def _get_page_arg(func_args: list, func_kwargs: dict, func_name: str) -> Page:
+    """Return Playwright page in the specified function by access its arguments.
+
+    :param func_args:
+    :type func_args: list
+    :param func_kwargs:
+    :type func_kwargs: dict
+    :param func_name:
+    :type func_name: str
+    :rtype: Page
+
+    """
     page = None
     if func_kwargs:
         page = func_kwargs.get("page")
@@ -181,8 +257,30 @@ def _get_page_arg(func_args: list, func_kwargs: dict, func_name: str) -> Page:
 
 
 def wait_after_execution(wait_ms: int = 2000, randomized: bool = True):
+    """Decorator that makes page in decorated function wait for exactly wait_ms seconds or with 15% variance
+    if randomized is True before next command is made for the page.
+
+    :param wait_ms:  (Default value = 2000)
+    :type wait_ms: int
+    :param randomized:  (Default value = True)
+    :type randomized: bool
+
+    """
+
     def decorator(func):
+        """
+
+        :param func: decorated function
+
+        """
+
         def func_wrapper(*func_args, **func_kwargs):
+            """
+
+            :param *func_args: non-keyword arguments of decorated function
+            :param **func_kwargs: keyword arguments of decorated function
+
+            """
             # get the page object. Check the kwargs first, then the first args
             page = _get_page_arg(func_args, func_kwargs, func.__name__)
 
@@ -216,8 +314,34 @@ def check_for_loaded_marker(
     load_message: str = None,
     timeout: int = 10000,
 ):
+    """Make given `marker` a Playwright Locator if it's a string by checking whether it not starts with a dot '.'
+    and `marker_strict` is False, then wait for `timeout` seconds to make it visible.
+
+    :param marker:  (Default value = None)
+    :type marker: str | Locator
+    :param marker_strict:  (Default value = False)
+    :type marker_strict: bool
+    :param load_message:  (Default value = None)
+    :type load_message: str
+    :param timeout:  (Default value = 10000)
+    :type timeout: int
+
+    """
+
     def decorator(func):
+        """
+
+        :param func: decorated function
+
+        """
+
         def func_wrapper(*func_args, **func_kwargs):
+            """
+
+            :param *func_args: non-keyword arguments of decorated function
+            :param **func_kwargs: keyword arguments of decorated function
+
+            """
             # get the page object. Check the kwargs first, then the first args
             page = _get_page_arg(func_args, func_kwargs, func.__name__)
 

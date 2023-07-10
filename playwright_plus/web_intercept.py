@@ -19,6 +19,13 @@ from asyncio.exceptions import CancelledError
 
 
 def set_json_to_page(page, buffer):
+    """Set `buffer` to `target_json` attribute of the `page` object if "error" key is not defined
+    or else the specified error is set.
+
+    :param page:
+    :param buffer:
+
+    """
     if not buffer.get("error"):
         page.target_json = buffer
     else:
@@ -30,7 +37,22 @@ def set_json_to_page(page, buffer):
 
 
 def construct_handle_response(page: Page, json_url_subpart: str):
+    """Return function that will set the response json to the given `page`
+    if `json_url_subpart` is a part of `response` url using set_json_to_page function.
+
+    :param page: Playwright Page object
+    :type page: Page
+    :param json_url_subpart: string to check with response url
+    :type json_url_subpart: str
+
+    """
+
     def handle_response(response):
+        """
+
+        :param response:
+
+        """
         try:
             if json_url_subpart in response.url:
                 try:
@@ -59,6 +81,30 @@ def intercept_json_playwright(
     goto_timeout=30000,
     **kwargs,
 ) -> dict:
+    """Get the response json from the `page_url`, call `json_detect_error` and `json_parse_result`
+    if they are specified and return the output.
+
+    :param page_url:
+    :type page_url: str
+    :param json_url_subpart:
+    :type json_url_subpart: str
+    :param page:  (Default value = None)
+    :type page: Page
+    :param json_detect_error:  (Default value = None)
+    :type json_detect_error: callable
+    :param json_parse_result:  (Default value = None)
+    :type json_parse_result: callable
+    :param captcha_solver_function:  (Default value = None)
+    :type captcha_solver_function: callable
+    :param max_refresh:  (Default value = 1)
+    :type max_refresh: int
+    :param timeout:  (Default value = 4000)
+    :type timeout: int
+    :param goto_timeout:  (Default value = 30000)
+    :param **kwargs:
+    :rtype: dict
+
+    """
     logging.debug("This version of playwright_intercept is deprecated")
     time_spent = 0
     nb_refresh = 0
@@ -68,6 +114,11 @@ def intercept_json_playwright(
     target_json = {}
 
     def handle_response(response):
+        """
+
+        :param response:
+
+        """
         if json_url_subpart in response.url:
             try:
                 buffer = response.json()
@@ -176,9 +227,33 @@ def intercept_json_playwright_old(
     wait_seconds: int = 4,
     **kwargs,
 ) -> dict:
+    """Get the response json from the `page_url`, call `json_detect_error` and `json_parse_result`
+    if they are specified and return the output.
+
+    :param page_url:
+    :type page_url: str
+    :param json_url_subpart:
+    :type json_url_subpart: str
+    :param page:  (Default value = None)
+    :type page: Page
+    :param json_detect_error:  (Default value = None)
+    :type json_detect_error: callable
+    :param json_parse_result:  (Default value = None)
+    :type json_parse_result: callable
+    :param wait_seconds:  (Default value = 4)
+    :type wait_seconds: int
+    :param **kwargs:
+    :rtype: dict
+
+    """
     target_json = {}
 
     def handle_response(response):
+        """
+
+        :param response:
+
+        """
         try:
             if json_url_subpart in response.url:
                 try:
@@ -245,15 +320,38 @@ def intercept_json_playwright_multiple(
     expect_more: int = 0,
     **kwargs,
 ) -> dict:
-    """
-    WARNING this is a dev environement.
+    """WARNING this is a dev environement.
     In a future version this will be merged with the other equivalent methods
     This particular variety needs to be able to recieve a wrong API cal and
     wait for a second one.
+    Get the response json from the `page_url`, call `json_detect_error` and `json_parse_result`
+    if they are specified and return the output.
+
+    :param page_url:
+    :type page_url: str
+    :param json_url_subpart:
+    :type json_url_subpart: str
+    :param page:  (Default value = None)
+    :param json_detect_error:  (Default value = None)
+    :type json_detect_error: callable
+    :param json_parse_result:  (Default value = None)
+    :type json_parse_result: callable
+    :param wait_seconds:  (Default value = 4)
+    :type wait_seconds: int
+    :param expect_more:  (Default value = 0)
+    :type expect_more: int
+    :param **kwargs:
+    :rtype: dict
+
     """
     target_json = {}
 
     def handle_response(response):
+        """
+
+        :param response:
+
+        """
         try:
             if json_url_subpart in response.url:
                 try:
@@ -321,6 +419,24 @@ def request_json_playwright(
     json_parse_result: callable = None,
     **kwargs,
 ) -> dict:
+    """Function that call `intercept_json_playwright` then return the result with following default options
+    if those not specified as keyword arguments:
+    captcha_solver_function: callable = None,
+    max_refresh: int = 1,
+    timeout: int = 4000,
+    goto_timeout=30000,
+
+
+    :param json_url:
+    :type json_url: str
+    :param json_detect_error:  (Default value = None)
+    :type json_detect_error: callable
+    :param json_parse_result:  (Default value = None)
+    :type json_parse_result: callable
+    :param **kwargs:
+    :rtype: dict
+
+    """
     result = intercept_json_playwright(
         page_url=json_url,
         json_url_subpart=json_url,
